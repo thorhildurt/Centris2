@@ -1,2 +1,2 @@
-# Centris 2.0 - MySchool on the command line
+# Centris 2.0 
 ##API and a command line interface for MySchool
