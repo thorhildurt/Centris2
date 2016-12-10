@@ -67,7 +67,7 @@ except:
 
 #My courses
 def courses(args):
-	r = requests.get('https://myschool.ru.is/myschool', auth=('thorhildurt15', password()))
+	r = requests.get('https://myschool.ru.is/myschool', auth=(username(), password()))
 	soup = BeautifulSoup(r.text, 'html.parser')
 
 	courses = soup.find_all('center')
@@ -94,7 +94,7 @@ def courses(args):
 #timetable
 def timetable(args):
 
-	r = requests.get('https://myschool.ru.is/myschool', auth=('thorhildurt15', password()))
+	r = requests.get('https://myschool.ru.is/myschool', auth=(username(), password()))
 	soup = BeautifulSoup(r.text, 'html.parser')
 
 	for link in soup.find_all('a'):
@@ -102,7 +102,7 @@ def timetable(args):
 			timetable = url + link.get('href') #create url for Verkefni
 
 
-	res = requests.get(timetable, auth=('thorhildurt15', password())) 
+	res = requests.get(timetable, auth=(username(), password())) 
 	timetablesoup = BeautifulSoup(res.text, 'html.parser')
 	timetable = timetablesoup.find('div', {'class': 'ruContentPage'})
 
@@ -137,14 +137,14 @@ def timetable(args):
 #Due assignments
 def dueass():
 
-	r = requests.get('https://myschool.ru.is/myschool', auth=('thorhildurt15', password()))
+	r = requests.get('https://myschool.ru.is/myschool', auth=(username(), password()))
 	soup = BeautifulSoup(r.text, 'html.parser')
 
 	for link in soup.find_all('a'):
 		if link.text == 'Verkefni':
 			dueproject = url + link.get('href') #create url for Verkefni
 
-	res = requests.get(dueproject, auth=('thorhildurt15', password())) #new requests with the new url
+	res = requests.get(dueproject, auth=(username(), password())) #new requests with the new url
 	projectsoup = BeautifulSoup(res.text, 'html.parser')
 	proj = projectsoup.find('div', {'class': 'ruContentPage'})
 
@@ -184,7 +184,7 @@ def dueass():
 #print pretty table for all assignments in one course
 def ass(url):
 
-	res = requests.get(url, auth=('thorhildurt15', password()))
+	res = requests.get(url, auth=(username(), password()))
 	projectsoup = BeautifulSoup(res.text, 'html.parser')
 
 	tables = projectsoup.find_all('table') 
@@ -232,7 +232,7 @@ def ass(url):
 		print()
 
 def allassignments():
-	r = requests.get('https://myschool.ru.is/myschool', auth=('thorhildurt15', password()))
+	r = requests.get('https://myschool.ru.is/myschool', auth=(username(), password()))
 	soup = BeautifulSoup(r.text, 'html.parser')
 
 	courselink = ''
@@ -240,7 +240,7 @@ def allassignments():
 		if link.text == 'Námskeið':
 			courselink = url + link.get('href') #create url for Verkefni
 
-	res = requests.get(courselink, auth=('thorhildurt15', password()))
+	res = requests.get(courselink, auth=(username(), password()))
 	projectsoup = BeautifulSoup(res.text, 'html.parser')
 
 	proj = projectsoup.find('td', {'class': 'ruRight'})
@@ -250,7 +250,7 @@ def allassignments():
 			courselink = url + link.get('href')
 
 	#test new link
-	res = requests.get(courselink, auth=('thorhildurt15', password()))
+	res = requests.get(courselink, auth=(username(), password()))
 	projectsoup = BeautifulSoup(res.text, 'html.parser')
 
 	newlinks = projectsoup.find('div', {'id': 'ruTabsNewcontainer'})
