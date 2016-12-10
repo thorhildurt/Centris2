@@ -16,7 +16,7 @@ import re
 #- api
 #+list all courses your taking (centris2 currentcourses, allcourses) X
 #+list all your assignments (due assignments) X
-#+list all your assignments (finished assignments)
+#+list all your assignments (finished assignments) X
 #+get info about assignment
 #+get your timetible X
 #+submit solution
@@ -26,8 +26,7 @@ import re
 #+timetable
 # proj (default = allt)
 #+ -d proj x
-#+ -a proj
-#+ -f proj
+#+ -a proj x
 #courses (current)
 # -f courses
 # -a courses
@@ -51,7 +50,7 @@ url = 'https://myschool.ru.is/myschool/' #the baseurl
 
 
 #My courses
-def courses():
+def courses(args):
 	courses = soup.find_all('center')
 	tablecontent = courses[1]
 	x = tablecontent.find('table')
@@ -74,7 +73,7 @@ def courses():
 	print(y.get_string())
 
 #timetable
-def timetable():
+def timetable(args):
 	for link in soup.find_all('a'):
 		if link.text == 'Stundatafla':
 			timetable = url + link.get('href') #create url for Verkefni
@@ -156,7 +155,58 @@ def dueass():
 	tableheader = tables[1].find_all('th')
 	rows = tables[1].find_all('tr')
 
+#print pretty table for all assignments in one course
+def ass(url):
+
+	res = requests.get(url, auth=('thorhildurt15', password()))
+	projectsoup = BeautifulSoup(res.text, 'html.parser')
+
+	tables = projectsoup.find_all('table') 
+
+	tableslist = []
+	for i in tables:
+		tableslist.append(i)
+
+	#hacking tables
+	cleantables = tableslist[13:-4]
+	assignmenttables = cleantables[1::2]
+
+	m = PrettyTable()
+
+	if assignmenttables:
+		tableheader = assignmenttables[0].find_all('th') 
+
+		headerlist = []
+		for i in tableheader:
+			headerlist.append(i.text)
+		m.field_names = headerlist
+
+		t = tableslist[8]
+		title = t.find('tr')
+
+		j = re.sub('\n', '', title.text)
+		#print title for assignment table
+		print(j)
+
+		#get data for tables
+		datalist = []
+		for x in assignmenttables:
+			tablerows = x.find_all('tr')
+			for i in tablerows:
+				if i.find('td'):
+					list = i.find_all('td')
+					data = []
+					for j in list:
+						data.append(j.text)
+					if len(data) != 7:
+						data.append('')
+					m.add_row(data)
+
+		print(m.get_string())
+		print()
+
 def allassignments():
+
 	courselink = ''
 	for link in soup.find_all('a'):
 		if link.text == 'Námskeið':
@@ -171,50 +221,24 @@ def allassignments():
 		if link.text == 'Verkefni *':
 			courselink = url + link.get('href')
 
+	#test new link
 	res = requests.get(courselink, auth=('thorhildurt15', password()))
 	projectsoup = BeautifulSoup(res.text, 'html.parser')
 
-	tables = projectsoup.find_all('table') #5 -4
-	tableslist = []
-	for i in tables:
-		tableslist.append(i)
+	newlinks = projectsoup.find('div', {'id': 'ruTabsNewcontainer'})
+	tablist = newlinks.find_all('a')
 
-	#hacking tables
-	cleantables = tableslist[13:-4]
-	assignmenttables = cleantables[1::2]
+	#print all assignments
+	for i in tablist:
+		ass(url + i.get('href'))
 
-	#Get header for table
-	m = PrettyTable()
-	tableheader = assignmenttables[0].find_all('th') 
-
-	headerlist = []
-	for i in tableheader:
-		headerlist.append(i.text)
-	m.field_names = headerlist
-
-	t = tableslist[8]
-	title = t.find('tr')
-	j = re.sub('\n', '', title.text)
-	#print title for assignment table
-	print('{:^80}'.format(j))
-	
-	#get data for tables
-	datalist = []
-	for x in assignmenttables:
-		tablerows = x.find_all('tr')
-		for i in tablerows:
-			if i.find('td'):
-				list = i.find_all('td')
-				data = []
-				for j in list:
-					data.append(j.text)
-				if len(data) != 7:
-					data.append('')
-				m.add_row(data)
-
-	print(m.get_string())
-
-
+def assignments(args):
+	if args.all:
+		allassignments()
+	elif args.due:
+		dueass()
+	else:
+		dueass()
 
 
 #ARGSPARSERS
@@ -226,70 +250,16 @@ subparsers = parser.add_subparsers()
 parser_timetable = subparsers.add_parser('timetable', help='Shows your current timetable from myschool')
 parser_timetable.set_defaults(func=timetable)
 
-#edit
-parser_dueass = subparsers.add_parser('dueassignments', help='Shows your comming up assignments')
-parser_dueass.set_defaults(func=dueass)
-
-parser_courses = subparsers.add_parser('courses', help='shows your current courses')
+parser_courses = subparsers.add_parser('courses', help='Shows your current courses')
 parser_courses.set_defaults(func=courses)
 
-parser_assignments = subparsers.add_parser('assignments', help='shows your assignment per course')
-parser_assignments.set_defaults(func=allassignments)
+parser_assignments = subparsers.add_parser('assignments', help='Shows your upcoming assignment by default, add -a for all assignments')
+parser_assignments.add_argument('-a', '--all', action='store_true', help='Shows all your assignments for this semester')
+parser_assignments.add_argument('-d', '--due', action='store_true', help='Shows your comming up assignments')
+parser_assignments.set_defaults(func=assignments)
 
 args = parser.parse_args()
-args.func()
-
-
-
-
-#field = []
-#for i in tableheader:
-#	field.append(i.text)
-#print(field)
-
-#header = ''
-#list = []
-#tempcolumn = ''
-#count = 0
-#for j in rows:
-#	if j.find('th'):
-#		if count >= 1:
-#			y.add_column(tempcolumn, list)
-#		tempcolumn = j.text
-#		list = []
-#		count += 1
-#	if not j.find('th'):
-#		list.append(j.find('td'))
-
-#y.add_column(tempcolumn, list)
-
-#t = PrettyTable() #create new pretty table method
-
-#for i in rows:
-#	if i.find('th'):
-#		print(i.text)
-		#t.field_names = i.text
-	#else:
-	#	t.add_row(i.text)
-
-
-
-
-#x.field_names = field	
-#x.add_row(row)
-
-
-#print(t.get_string())
-	
-#for i in rows:
-
-#	j = i.find('td')
-#	if j:
-#		print(j.text)
-
-
-
-
+args.func(args)
 
 
 
