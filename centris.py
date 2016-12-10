@@ -6,6 +6,7 @@ from prettytable import PrettyTable
 from datetime import datetime
 import argparse
 import re
+from pathlib import Path
 
 #args = parser.parse_args()
 #downl = args.downl_folder
@@ -33,7 +34,10 @@ import re
 # -c courses
 
 #- turtle shell fyrir CLI
-
+def login(args):
+	store_user()
+	store_pass()
+	
 def store_pass():
 	with open('supersecure', 'w') as f:
 		f.write(getpass())
@@ -41,16 +45,31 @@ def store_pass():
 def password():
 	return open('supersecure').read()
 
-r = requests.get('https://myschool.ru.is/myschool', auth=('thorhildurt15', password()))
+def username():
+	return open('user').read()
+
+def store_user():
+	with open('user', 'w') as f:
+		x = input("Username: ")
+		f.write(x)
+
 #store_pass()
 
-soup = BeautifulSoup(r.text, 'html.parser')
-
 url = 'https://myschool.ru.is/myschool/' #the baseurl
+
+try:
+	username()
+	password()
+except:
+	login(None)
+
 
 
 #My courses
 def courses(args):
+	r = requests.get('https://myschool.ru.is/myschool', auth=('thorhildurt15', password()))
+	soup = BeautifulSoup(r.text, 'html.parser')
+
 	courses = soup.find_all('center')
 	tablecontent = courses[1]
 	x = tablecontent.find('table')
@@ -74,6 +93,10 @@ def courses(args):
 
 #timetable
 def timetable(args):
+
+	r = requests.get('https://myschool.ru.is/myschool', auth=('thorhildurt15', password()))
+	soup = BeautifulSoup(r.text, 'html.parser')
+
 	for link in soup.find_all('a'):
 		if link.text == 'Stundatafla':
 			timetable = url + link.get('href') #create url for Verkefni
@@ -113,6 +136,9 @@ def timetable(args):
 
 #Due assignments
 def dueass():
+
+	r = requests.get('https://myschool.ru.is/myschool', auth=('thorhildurt15', password()))
+	soup = BeautifulSoup(r.text, 'html.parser')
 
 	for link in soup.find_all('a'):
 		if link.text == 'Verkefni':
@@ -206,6 +232,8 @@ def ass(url):
 		print()
 
 def allassignments():
+	r = requests.get('https://myschool.ru.is/myschool', auth=('thorhildurt15', password()))
+	soup = BeautifulSoup(r.text, 'html.parser')
 
 	courselink = ''
 	for link in soup.find_all('a'):
@@ -241,6 +269,13 @@ def assignments(args):
 		dueass()
 
 
+def logout(args):
+	if Path('supersecure').exists():
+		Path('supersecure').unlink()
+	if Path('user').exists():
+		Path('user').unlink()
+
+
 #ARGSPARSERS
 
 parser = argparse.ArgumentParser(
@@ -257,6 +292,12 @@ parser_assignments = subparsers.add_parser('assignments', help='Shows your upcom
 parser_assignments.add_argument('-a', '--all', action='store_true', help='Shows all your assignments for this semester')
 parser_assignments.add_argument('-d', '--due', action='store_true', help='Shows your comming up assignments')
 parser_assignments.set_defaults(func=assignments)
+
+parser_timetable = subparsers.add_parser('logout', help='Logout from your account')
+parser_timetable.set_defaults(func=logout)
+
+parser_timetable = subparsers.add_parser('login', help='Login to your myschool acc')
+parser_timetable.set_defaults(func=login)
 
 args = parser.parse_args()
 args.func(args)
