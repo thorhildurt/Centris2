@@ -53,20 +53,20 @@ def store_user():
 		x = input("Username: ")
 		f.write(x)
 
-#store_pass()
-
 url = 'https://myschool.ru.is/myschool/' #the baseurl
 
-try:
-	username()
-	password()
-except:
-	login(None)
-
+def islogedin():
+	print('Hey cutie! You must be logged in <3')
+	try:
+		username()
+		password()
+	except:
+		login(None)
 
 
 #My courses
 def courses(args):
+	islogedin()
 	r = requests.get('https://myschool.ru.is/myschool', auth=(username(), password()))
 	soup = BeautifulSoup(r.text, 'html.parser')
 
@@ -93,6 +93,7 @@ def courses(args):
 
 #timetable
 def timetable(args):
+	islogedin()
 
 	r = requests.get('https://myschool.ru.is/myschool', auth=(username(), password()))
 	soup = BeautifulSoup(r.text, 'html.parser')
@@ -100,7 +101,6 @@ def timetable(args):
 	for link in soup.find_all('a'):
 		if link.text == 'Stundatafla':
 			timetable = url + link.get('href') #create url for Verkefni
-
 
 	res = requests.get(timetable, auth=(username(), password())) 
 	timetablesoup = BeautifulSoup(res.text, 'html.parser')
@@ -136,6 +136,7 @@ def timetable(args):
 
 #Due assignments
 def dueass():
+	islogedin()
 
 	r = requests.get('https://myschool.ru.is/myschool', auth=(username(), password()))
 	soup = BeautifulSoup(r.text, 'html.parser')
@@ -187,49 +188,46 @@ def ass(url):
 	res = requests.get(url, auth=(username(), password()))
 	projectsoup = BeautifulSoup(res.text, 'html.parser')
 
-	tables = projectsoup.find_all('table') 
+	ttables = projectsoup.find_all('center') 
 
-	tableslist = []
-	for i in tables:
-		tableslist.append(i)
+	ttlist = []
+	for i in ttables:
+		ttlist.append(i.table)
 
-	#hacking tables
-	cleantables = tableslist[13:-4]
-	assignmenttables = cleantables[1::2]
+	ttablelist = []
+	for i in ttlist:
+		ttablelist.append(i.find('table'))
+
+	tableheader = ttablelist[0].find('tr')
 
 	m = PrettyTable()
 
-	if assignmenttables:
-		tableheader = assignmenttables[0].find_all('th') 
+	header = tableheader.find_all('th')
+	headerlist = []
+	for i in header:
+		headerlist.append(i.text)
+	m.field_names = headerlist
 
-		headerlist = []
-		for i in tableheader:
-			headerlist.append(i.text)
-		m.field_names = headerlist
+	rows = []
+	for i in ttablelist:
+		rows += i.find_all('tr')
 
-		t = tableslist[8]
-		title = t.find('tr')
+	for row in rows:
+		if row.find('td'):
+			list = row.find_all('td')
+			data = []
+			for i in list:
+				data.append(i.text)
+			while len(data) < 7:
+				data.append('')
+			m.add_row(data)
 
-		j = re.sub('\n', '', title.text)
-		#print title for assignment table
-		print(j)
 
-		#get data for tables
-		datalist = []
-		for x in assignmenttables:
-			tablerows = x.find_all('tr')
-			for i in tablerows:
-				if i.find('td'):
-					list = i.find_all('td')
-					data = []
-					for j in list:
-						data.append(j.text)
-					if len(data) != 7:
-						data.append('')
-					m.add_row(data)
+	title = projectsoup.find('span', {'class':'ruContent'})
+	print()
+	print(title.text)
+	print(m.get_string())
 
-		print(m.get_string())
-		print()
 
 def allassignments():
 	r = requests.get('https://myschool.ru.is/myschool', auth=(username(), password()))
@@ -261,6 +259,7 @@ def allassignments():
 		ass(url + i.get('href'))
 
 def assignments(args):
+	islogedin()
 	if args.all:
 		allassignments()
 	elif args.due:
@@ -301,8 +300,6 @@ parser_timetable.set_defaults(func=login)
 
 args = parser.parse_args()
 args.func(args)
-
-
 
 
 #TEST STUFF
