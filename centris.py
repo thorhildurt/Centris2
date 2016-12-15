@@ -18,10 +18,10 @@ from pathlib import Path
 #+list all courses your taking (centris2 currentcourses, allcourses) X
 #+list all your assignments (due assignments) X
 #+list all your assignments (finished assignments) X
-#+get info about assignment
+#+get info about assignment ~
 #+get your timetible X
-#+submit solution
-#+get lunch
+#+submit solution ~
+#+get lunch X
 
 #COMMANDS:
 #+timetable
@@ -56,11 +56,11 @@ def store_user():
 url = 'https://myschool.ru.is/myschool/' #the baseurl
 
 def islogedin():
-	print('Hey cutie! You must be logged in <3')
 	try:
 		username()
 		password()
 	except:
+		print('Hey cutie! You must be logged in <3')
 		login(None)
 
 
@@ -274,6 +274,67 @@ def logout(args):
 	if Path('user').exists():
 		Path('user').unlink()
 
+def lunch(args):
+	r = requests.get('https://myschool.ru.is/myschool', auth=(username(), password()))
+	soup = BeautifulSoup(r.text, 'html.parser')
+
+	for link in soup.find_all('a'):
+		if link.text == 'MÁLIÐ':
+			menulink = link.get('href') #create url for Verkefni
+
+	res = requests.get(menulink)
+	menusoup = BeautifulSoup(res.text, 'html.parser')
+
+	x = menusoup.find_all('div',{'class': 'wpb_wrapper'})
+
+	menuweek = []
+	for i in menusoup.find_all('div',{'class': 'wpb_wrapper'}):
+		if i.find('div',{'class': 'menu-text'}):
+			data = []
+			for k in i.find_all('div',{'class': 'menu-text'}):
+				data.append(k)
+			menuweek.append(data)
+
+	if args.today:
+		menutoday(menuweek)
+	elif args.week:
+		allweekmenu(menuweek)
+	else:
+		menutoday(menuweek)
+
+
+def allweekmenu(menuweek):
+
+	days = ['Mánudagur', 'Þriðjudagur', 'Miðvikudagur', 'Fimmtudagur', 'Föstudagur']
+
+	count = 0
+	print('-------------------------------------------------')
+	for day in menuweek:
+		print('{:^40}'.format('*** ' + days[count] + ' ***'))
+		print()
+		for i in day:
+			print(i.find('div', {'class': 'menu-title'}).text)
+			print('-> '+i.find('div', {'class': 'menu-desc'}).text)
+			print()
+		print('-------------------------------------------------')
+		print()
+		count += 1
+
+def menutoday(menuweek):
+
+	days = ['Mánudagur', 'Þriðjudagur', 'Miðvikudagur', 'Fimmtudagur', 'Föstudagur']
+	x = datetime.today().weekday()
+
+	if x == 6 or x == 7:
+		print('No lunch today :-(')
+	else:
+		print('{:^40}'.format('*** ' + days[x] + ' ***'))
+		print()
+		for i in menuweek[x]:
+			print(i.find('div', {'class': 'menu-title'}).text)
+			print('-> '+i.find('div', {'class': 'menu-desc'}).text)
+			print()
+
 
 #ARGSPARSERS
 
@@ -298,24 +359,11 @@ parser_timetable.set_defaults(func=logout)
 parser_timetable = subparsers.add_parser('login', help='Login to your myschool acc')
 parser_timetable.set_defaults(func=login)
 
+parser_menu = subparsers.add_parser('lunch', help='Shows the menu from the cafeteria in HR. Shows the lunch today by default')
+parser_menu.add_argument('-t', '--today', action='store_true', help='Show the today\'s lunch at málið in HR')
+parser_menu.add_argument('-w', '--week', action='store_true', help='Show the lunch for the week at málið in HR')
+parser_menu.set_defaults(func=lunch)
+
+
 args = parser.parse_args()
 args.func(args)
-
-
-#TEST STUFF
-#---------------
-#print(children)
-#print(children.text) ## next assignments
-#children = proj.findChildren()
-#for i in Children:
-#	print(i)
-
-
-
-#print(soup2.table)
-#store_pass(
-    	
-
-#print(soup.get_text())
-
-#print(type(r.text))
