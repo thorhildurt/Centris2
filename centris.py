@@ -8,31 +8,6 @@ import argparse
 import re
 from pathlib import Path
 
-#TODO:
-#- api
-#+list all courses your taking (centris2 currentcourses, allcourses) X
-#+list all your assignments (due assignments) X
-#+list all your assignments (finished assignments) X
-#+get info about assignment ~
-#+get your timetible X
-#+submit solution ~
-#+get lunch X
-#only get assignment form one course X
-#student lists
-#finished courses
-#2f1
-
-#COMMANDS:
-#+timetable
-# proj (default = allt)
-#+ -d proj x
-#+ -a proj x
-#courses (current)
-# -f courses
-# -a courses
-# -c courses
-
-#- turtle shell fyrir CLI
 def login(args):
 	store_user()
 	store_pass()
@@ -301,6 +276,7 @@ def logout(args):
 		Path('user').unlink()
 
 def lunch(args):
+	islogedin()
 	r = requests.get('https://myschool.ru.is/myschool', auth=(username(), password()))
 	soup = BeautifulSoup(r.text, 'html.parser')
 
@@ -378,7 +354,6 @@ def course(string):
 		print('Please insert one of the following commands: ')
 		for i in courses:
 			print(i, end=', ')
-
 
 
 #ARGSPARSERS
