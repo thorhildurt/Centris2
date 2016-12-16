@@ -13,4 +13,4 @@ Command line interface for myschool.ru.is. Instead of going to www.myschool.ru.i
 
 ##Commands
 To get all available command for the API run:
-~~~~ python3 centris.py -h ~~~~
+''' python3 centris.py -h '''
