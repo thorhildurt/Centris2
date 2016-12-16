@@ -8,11 +8,6 @@ import argparse
 import re
 from pathlib import Path
 
-#args = parser.parse_args()
-#downl = args.downl_folder
-#dest = args.dest_folder
-
-
 #TODO:
 #- api
 #+list all courses your taking (centris2 currentcourses, allcourses) X
@@ -22,7 +17,7 @@ from pathlib import Path
 #+get your timetible X
 #+submit solution ~
 #+get lunch X
-#only get assignment form one course
+#only get assignment form one course X
 #student lists
 #finished courses
 #2f1
@@ -383,8 +378,6 @@ def course(string):
 		print('Please insert one of the following commands: ')
 		for i in courses:
 			print(i, end=', ')
-
-
 
 
 
