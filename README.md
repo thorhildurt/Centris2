@@ -13,6 +13,12 @@ Command line interface for myschool.ru.is. Instead of going to www.myschool.ru.i
 + login 
 + logout
 
+##How to run
++ Make sure that Python3 is installed
++ Install the PyPI packages listed in requirements.txt
++ Unzip the project to your favorite directory
++ Then run some scripts in the command line window on your local computer
+
 ##Commands
 To get all available command for the API run:
 ``` python3 centris.py -h ```
@@ -26,7 +32,7 @@ To get all available command for the API run:
 + login
 + lunch [-t] [-w]
 
-##Exambles
+##Examples
 ### Use Python3 for mac/linux and use py for windows
 + Get your timetable:
 ``` python3 centris.py timetable ```
