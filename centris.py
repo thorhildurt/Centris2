@@ -22,6 +22,10 @@ from pathlib import Path
 #+get your timetible X
 #+submit solution ~
 #+get lunch X
+#only get assignment form one course
+#student lists
+#finished courses
+#2f1
 
 #COMMANDS:
 #+timetable
@@ -63,10 +67,30 @@ def islogedin():
 		print('Hey cutie! You must be logged in <3')
 		login(None)
 
+def getcourses():
+	r = requests.get('https://myschool.ru.is/myschool', auth=(username(), password()))
+	soup = BeautifulSoup(r.text, 'html.parser')
+
+	courselink = ''
+	for link in soup.find_all('a'):
+		if link.text == 'Námskeið':
+			courselink = url + link.get('href')
+
+	r = requests.get(courselink, auth=(username(), password()))
+	coursesoup = BeautifulSoup(r.text, 'html.parser')
+
+	links = coursesoup.find_all('span', title = True)
+	
+	list = []
+	for i in links:
+		list.append(i['title'])
+		
+	return list
 
 #My courses
 def courses(args):
 	islogedin()
+	
 	r = requests.get('https://myschool.ru.is/myschool', auth=(username(), password()))
 	soup = BeautifulSoup(r.text, 'html.parser')
 
@@ -74,18 +98,20 @@ def courses(args):
 	tablecontent = courses[1]
 	x = tablecontent.find('table')
 	tableheader = x.find('th')
-	rows = x.find_all('tr')
 	y = PrettyTable()
 	y.field_names = tableheader
 
-	courselist = []
-	for i in rows:
-		if i.find('td'):
-			courselist.append(i.find('td')['title'])
+	allcourses = getcourses()
+	
+	clean = []
+	for i in allcourses:
+		string = re.sub('\n', '', i)
+		cleanstring = re.sub('\.[0-9]+', '', string)
+		clean.append(re.sub('\r', ' ', cleanstring))
 
 	list = []
-	for data in courselist[:-1]:
-		list.append(data)
+	for i in clean:
+		list.append(i)
 		y.add_row(list)
 		list = []
 
@@ -228,8 +254,7 @@ def ass(url):
 	print(title.text)
 	print(m.get_string())
 
-
-def allassignments():
+def allcourselink():
 	r = requests.get('https://myschool.ru.is/myschool', auth=(username(), password()))
 	soup = BeautifulSoup(r.text, 'html.parser')
 
@@ -253,6 +278,10 @@ def allassignments():
 
 	newlinks = projectsoup.find('div', {'id': 'ruTabsNewcontainer'})
 	tablist = newlinks.find_all('a')
+	return tablist
+
+def allassignments():
+	tablist = allcourselink()
 
 	#print all assignments
 	for i in tablist:
@@ -264,6 +293,8 @@ def assignments(args):
 		allassignments()
 	elif args.due:
 		dueass()
+	elif args.course:
+		course(args.course)
 	else:
 		dueass()
 
@@ -335,35 +366,60 @@ def menutoday(menuweek):
 			print('-> '+i.find('div', {'class': 'menu-desc'}).text)
 			print()
 
+def course(string):
+	courselist = getcourses()
+	splitlist = []
+	for i in courselist:
+		splitlist.append(re.split('-|\.', i))
+
+	courses = [i[2] for i in splitlist ]
+
+	if string in courses:
+		tablist = allcourselink()
+		for i in tablist:
+			if string in i.parent['title']:
+				ass(url + i.get('href'))
+	else:
+		print('Please insert one of the following commands: ')
+		for i in courses:
+			print(i, end=', ')
+
+
+
+
 
 #ARGSPARSERS
 
 parser = argparse.ArgumentParser(
 	description="Get stuff from myschool")
+
 subparsers = parser.add_subparsers()
 
-parser_timetable = subparsers.add_parser('timetable', help='Shows your current timetable from myschool')
+parser_timetable = subparsers.add_parser('timetable', help='shows your current timetable from myschool')
 parser_timetable.set_defaults(func=timetable)
 
-parser_courses = subparsers.add_parser('courses', help='Shows your current courses')
+parser_courses = subparsers.add_parser('courses', help='shows your current courses')
 parser_courses.set_defaults(func=courses)
 
-parser_assignments = subparsers.add_parser('assignments', help='Shows your upcoming assignment by default, add -a for all assignments')
-parser_assignments.add_argument('-a', '--all', action='store_true', help='Shows all your assignments for this semester')
-parser_assignments.add_argument('-d', '--due', action='store_true', help='Shows your comming up assignments')
+parser_assignments = subparsers.add_parser('assignments', help='shows your upcoming assignment by default, add -a for all assignments, add -c "abbreviation for coursename"')
+parser_assignments.add_argument('-a', '--all', action='store_true', help='shows all your assignments for this semester')
+parser_assignments.add_argument('-d', '--due', action='store_true', help='shows your comming up assignments')
+parser_assignments.add_argument('-c','--course', metavar='STRING', default ='', type=str, help='shows all your assignments for specified course: type -c "abbreviation for coursename"')
+
 parser_assignments.set_defaults(func=assignments)
 
-parser_timetable = subparsers.add_parser('logout', help='Logout from your account')
+parser_timetable = subparsers.add_parser('logout', help='logout from your account')
 parser_timetable.set_defaults(func=logout)
 
-parser_timetable = subparsers.add_parser('login', help='Login to your myschool acc')
+parser_timetable = subparsers.add_parser('login', help='login to your myschool acc')
 parser_timetable.set_defaults(func=login)
 
-parser_menu = subparsers.add_parser('lunch', help='Shows the menu from the cafeteria in HR. Shows the lunch today by default')
-parser_menu.add_argument('-t', '--today', action='store_true', help='Show the today\'s lunch at málið in HR')
-parser_menu.add_argument('-w', '--week', action='store_true', help='Show the lunch for the week at málið in HR')
+parser_menu = subparsers.add_parser('lunch', help='shows the menu from the cafeteria in HR. shows the lunch today by default')
+parser_menu.add_argument('-t', '--today', action='store_true', help='show the today\'s lunch at málið in HR')
+parser_menu.add_argument('-w', '--week', action='store_true', help='show the lunch for the week at málið in HR')
 parser_menu.set_defaults(func=lunch)
-
 
 args = parser.parse_args()
 args.func(args)
+
+
