@@ -1,8 +1,8 @@
 # Centris 2.0 
-##API and a command line interface for MySchool
+## API and a command line interface for MySchool
 Command line interface for myschool.ru.is. Instead of going to www.myschool.ru.is you can get various info from your myschool account by only using the command line on your local computer.
 
-##Features
+## Features
 + Get your timetable for the current week
 + View all your courses that you are enrolled in
 + View upcoming assignments and deadline
@@ -13,17 +13,17 @@ Command line interface for myschool.ru.is. Instead of going to www.myschool.ru.i
 + login 
 + logout
 
-##How to run
+## How to run
 + Make sure that Python3 is installed
 + Install the PyPI packages listed in requirements.txt
 + Unzip the project to your favorite directory
 + Then run some commands in the command line window on your local computer (see below)
 
-##Commands
+## Commands
 To get all available commands for the API run:
 ``` python3 centris.py -h ```
 
-###list of commands
+### list of commands
 + timetable
 + courses
 + assignments [-a] [-d] [-c 'specific course string' ]
@@ -31,7 +31,7 @@ To get all available commands for the API run:
 + login
 + lunch [-t] [-w]
 
-##Examples
+## Examples
 ### Use Python3 for mac/linux and use py for windows
 + Get your timetable:
 ``` python3 centris.py timetable ```
